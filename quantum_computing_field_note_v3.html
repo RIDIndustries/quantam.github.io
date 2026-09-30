@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QUANTUM / FIELD NOTE 01</title>
+<meta name="description" content="A visual field note on quantum computing: qubits, superposition, interference, Grover's algorithm, and quantum hardware.">
+<style>
+  :root{
+    --paper:#f0ede4;
+    --paper2:#e7e2d7;
+    --ink:#171717;
+    --soft:#5f5d58;
+    --grid:#d0cabd;
+    --blue:#2e4bff;
+    --orange:#ff633d;
+    --mint:#cce7d8;
+    --white:#faf8f2;
+    --black:#151515;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Arial, Helvetica, sans-serif;
+    overflow-x:hidden;
+  }
+  body:before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.25;
+    background-image:
+      linear-gradient(90deg, transparent 49.5%, #cec8bb 49.5%, #cec8bb 50.5%, transparent 50.5%),
+      linear-gradient(transparent 49.5%, #cec8bb 49.5%, #cec8bb 50.5%, transparent 50.5%);
+    background-size:80px 80px;
+    mask-image:linear-gradient(to bottom, #000 0%, transparent 88%);
+  }
+  a{color:inherit}
+  .page{position:relative;z-index:1}
+  .shell{width:min(1260px,93vw);margin:auto}
+
+  /* Different visual language: editorial/Swiss field notebook, not card-heavy Apple UI */
+  .mast{
+    border-bottom:1px solid var(--ink);
+    padding:22px 0 13px;
+  }
+  .mast-row{
+    display:grid;
+    grid-template-columns:130px 1fr 190px;
+    gap:20px; align-items:end;
+  }
+  .micro{
+    font:700 10px/1.15 "Courier New", monospace;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+  .micro.dim{color:#77736c}
+  .edition{
+    text-align:right;
+  }
+
+  .hero{
+    min-height:91vh;
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:40px;
+    padding:72px 0 95px;
+    align-items:end;
+  }
+  .hero-left{padding-bottom:12px}
+  .hero-title{
+    margin:0;
+    font-size:clamp(72px,11vw,154px);
+    line-height:.78;
+    letter-spacing:-.095em;
+    font-weight:900;
+    text-transform:uppercase;
+  }
+  .hero-title .blue{color:var(--blue)}
+  .hero-rule{
+    margin-top:34px;
+    display:grid;
+    grid-template-columns:100px 1fr;
+    gap:16px;
+    max-width:760px;
+    padding-top:12px;
+    border-top:2px solid var(--ink);
+  }
+  .hero-rule p{
+    margin:0;
+    font-size:18px;
+    line-height:1.45;
+    max-width:630px;
+  }
+  .hero-index{
+    font:700 11px/1.3 "Courier New",monospace;
+    color:#77736c;
+  }
+
+  .orbit-plate{
+    position:relative;
+    aspect-ratio:1/1;
+    border:1px solid var(--ink);
+    background:var(--white);
+    overflow:hidden;
+    clip-path:polygon(0 0,100% 0,100% 90%,90% 100%,0 100%);
+  }
+  .orbit-plate:after{
+    content:"FIELD / 02";
+    position:absolute;
+    right:13px; top:11px;
+    font:700 9px/1 "Courier New",monospace;
+    letter-spacing:.16em;
+  }
+  .ring{
+    position:absolute; left:50%; top:49%;
+    width:72%; aspect-ratio:1;
+    border:1px solid var(--ink);
+    border-radius:50%;
+    transform:translate(-50%,-50%) rotate(18deg) scaleX(.52);
+  }
+  .ring.r2{width:84%;transform:translate(-50%,-50%) rotate(-28deg) scaleX(.52)}
+  .ring.r3{width:58%;transform:translate(-50%,-50%) rotate(62deg) scaleX(.52)}
+  .center{
+    position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);
+    width:104px;height:104px;background:var(--blue);color:var(--white);
+    border-radius:50%;display:grid;place-items:center;
+    font:bold 24px/1 Georgia,serif;
+    box-shadow:18px 18px 0 var(--orange);
+  }
+  .point{
+    position:absolute;width:12px;height:12px;background:var(--ink);border-radius:50%;
+  }
+  .p1{left:14%;top:24%}.p2{right:15%;top:32%}.p3{left:27%;bottom:20%}.p4{right:23%;bottom:17%}
+  .plate-note{
+    position:absolute;left:17px;bottom:14px;
+    width:180px;font:700 10px/1.3 "Courier New",monospace;
+  }
+
+  .section{padding:100px 0}
+  .section-grid{
+    display:grid;
+    grid-template-columns:145px 1fr;
+    gap:38px;
+    border-top:1px solid var(--ink);
+    padding-top:14px;
+  }
+  .side{
+    font:700 10px/1.45 "Courier New",monospace;
+    text-transform:uppercase;
+    letter-spacing:.13em;
+    color:#6e6b64;
+  }
+  .section h2{
+    margin:0;
+    max-width:900px;
+    font-size:clamp(44px,7vw,94px);
+    line-height:.86;
+    letter-spacing:-.075em;
+    font-weight:900;
+    text-transform:uppercase;
+  }
+  .intro{
+    margin:25px 0 0;
+    font-size:18px;
+    line-height:1.55;
+    max-width:830px;
+  }
+
+  .formula-strip{
+    margin-top:42px;
+    border-top:2px solid var(--ink);
+    border-bottom:1px solid var(--ink);
+    padding:18px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .formula{
+    font:italic 31px/1 Georgia,serif;
+    letter-spacing:-.04em;
+  }
+  .formula-note{
+    font:700 10px/1.4 "Courier New",monospace;
+    color:#716e67;
+    max-width:380px;
+    text-align:right;
+  }
+
+  .spec-grid{
+    display:grid;
+    grid-template-columns:repeat(12,1fr);
+    gap:11px;
+    margin-top:48px;
+  }
+  .spec{
+    border:1px solid var(--ink);
+    background:var(--white);
+    min-height:195px;
+    padding:18px;
+    position:relative;
+  }
+  .spec:nth-child(1){grid-column:span 5}
+  .spec:nth-child(2){grid-column:span 7}
+  .spec:nth-child(3){grid-column:span 7}
+  .spec:nth-child(4){grid-column:span 5;background:var(--ink);color:var(--white)}
+  .spec .n{
+    font:700 10px/1 "Courier New",monospace;color:#77736c
+  }
+  .spec:nth-child(4) .n{color:#aaa69c}
+  .spec h3{
+    margin:50px 0 8px;font:900 29px/.95 Arial,Helvetica,sans-serif;letter-spacing:-.05em
+  }
+  .spec p{margin:0;max-width:460px;font-size:14px;line-height:1.45;color:#5f5d58}
+  .spec:nth-child(4) p{color:#cecabf}
+
+  .visual{
+    margin-top:48px;
+    border:1px solid var(--ink);
+    background:var(--black);
+    color:var(--white);
+    min-height:420px;
+    position:relative;
+    overflow:hidden;
+  }
+  .visual-top{
+    padding:14px 16px;border-bottom:1px solid #4a4945;
+    display:flex;justify-content:space-between;gap:15px;
+    font:700 10px/1 "Courier New",monospace;color:#b6b1a7;letter-spacing:.11em
+  }
+  .probability-field{
+    position:absolute;inset:62px 0 0;
+    background:
+      repeating-linear-gradient(0deg,transparent 0,transparent 39px,#262624 40px),
+      repeating-linear-gradient(90deg,transparent 0,transparent 39px,#262624 40px);
+  }
+  .beam{
+    position:absolute;left:6%;right:6%;top:52%;
+    height:2px;background:#393835;
+  }
+  .beam .pulse{
+    width:38%;height:100%;background:linear-gradient(90deg,transparent,var(--blue),var(--orange),transparent);
+    animation:slide 3.8s ease-in-out infinite;
+  }
+  @keyframes slide{0%,100%{transform:translateX(-15%)}50%{transform:translateX(155%)}}
+  .state-node{
+    position:absolute;
+    width:72px;height:72px;border:1px solid #807c71;
+    display:grid;place-items:center;
+    font:italic 19px/1 Georgia,serif;
+    background:#1b1b19;
+    transition:.4s;
+  }
+  .state-node:hover{transform:translateY(-5px);background:var(--blue);border-color:var(--white)}
+  .sn1{left:10%;top:28%}.sn2{left:35%;top:58%}.sn3{left:63%;top:25%}.sn4{right:9%;top:59%}
+  .visual-label{
+    position:absolute;left:18px;bottom:16px;
+    max-width:300px;font:700 10px/1.45 "Courier New",monospace;color:#aaa69d
+  }
+
+  /* Game: not a polished app card — looks like a physical research instrument / poster */
+  .game{
+    margin-top:48px;
+    display:grid;
+    grid-template-columns:260px 1fr;
+    min-height:560px;
+    border:2px solid var(--ink);
+    background:var(--white);
+  }
+  .game-rail{
+    border-right:2px solid var(--ink);
+    padding:20px;
+    background:var(--yellowish, #f7a55d);
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .game-rail h3{
+    margin:35px 0 0;
+    font-size:44px;line-height:.82;
+    letter-spacing:-.075em;text-transform:uppercase;
+  }
+  .game-rail .smallcopy{
+    margin-top:22px;font:700 10px/1.5 "Courier New",monospace;
+  }
+  .seven{
+    font:900 92px/.72 Georgia,serif;
+    letter-spacing:-.1em;
+  }
+  .game-stage{padding:22px}
+  .game-title-row{
+    display:flex;justify-content:space-between;align-items:end;gap:12px;
+    border-bottom:1px solid var(--ink);padding-bottom:12px
+  }
+  .game-title{font:900 24px/.95 Arial,sans-serif;letter-spacing:-.05em;text-transform:uppercase}
+  .target-tag{font:700 9px/1 "Courier New",monospace;letter-spacing:.11em}
+  .slots{
+    margin-top:25px;
+    display:grid;grid-template-columns:repeat(8,1fr);gap:6px
+  }
+  .slot{
+    aspect-ratio:1/.9;
+    border:1px solid var(--ink);
+    display:grid;place-items:center;
+    position:relative;
+    background:#f4f1e8;
+    font:900 17px/1 "Courier New",monospace;
+    transition:.3s;
+  }
+  .slot:before{
+    content:"";position:absolute;top:7px;left:7px;right:7px;height:2px;background:var(--ink);opacity:.13
+  }
+  .slot span{display:block;font-size:8px;margin-top:7px;color:#77736c}
+  .slot.mark{background:#dcd8ca}
+  .slot.hit{background:var(--blue);color:var(--white);border-color:var(--blue);transform:translateY(-3px)}
+  .slot.done{background:var(--orange);color:var(--white);border-color:var(--orange)}
+
+  .buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+  button{
+    border:1px solid var(--ink);background:var(--ink);color:var(--white);
+    padding:11px 13px;border-radius:0;
+    font:700 10px/1 "Courier New",monospace;letter-spacing:.08em;
+    cursor:pointer;transition:.18s;
+  }
+  button:hover{transform:translateY(-2px)}
+  button.alt{background:transparent;color:var(--ink)}
+  button.blue{background:var(--blue);border-color:var(--blue)}
+
+  .readout{
+    margin-top:22px;
+    border-top:1px solid var(--ink);
+    display:grid;grid-template-columns:180px 1fr;gap:20px;
+    padding-top:15px
+  }
+  .readout .label{font:700 9px/1.5 "Courier New",monospace;color:#706c64;letter-spacing:.13em}
+  .phase{font:900 24px/1 Arial,sans-serif;letter-spacing:-.045em;text-transform:uppercase}
+  .copy{margin-top:7px;font-size:13px;line-height:1.45}
+  .progress{
+    height:7px;background:#d7d2c6;margin-top:12px
+  }
+  .progress span{display:block;width:0;height:100%;background:var(--blue);transition:width .5s}
+
+  .metrics{
+    margin-top:20px;
+    display:grid;grid-template-columns:1fr 1fr;gap:8px
+  }
+  .metric{
+    border-top:2px solid var(--ink);padding-top:10px
+  }
+  .metric .label{font:700 9px/1 "Courier New",monospace;color:#77736c;letter-spacing:.12em}
+  .metric .value{font:900 32px/1.0 Arial,sans-serif;letter-spacing:-.06em;margin-top:8px}
+  .metric p{font-size:11px;line-height:1.45;color:#66635c;margin:7px 0 0}
+
+  .amplitudes{
+    margin-top:20px;border:1px solid var(--ink);padding:15px;
+    background:#eeeae0
+  }
+  .amp-head{
+    display:flex;justify-content:space-between;gap:15px;
+    font:700 9px/1 "Courier New",monospace;color:#65625a;letter-spacing:.1em
+  }
+  .amp-grid{display:grid;gap:6px;margin-top:14px}
+  .amp-row{
+    display:grid;grid-template-columns:38px 1fr 42px;gap:6px;align-items:center;
+    font:700 9px/1 "Courier New",monospace
+  }
+  .track{height:9px;background:#d2cec2}
+  .fill{height:100%;width:12.5%;background:#717169;transition:width .65s ease}
+  .fill.target{background:var(--orange)}
+
+  .algorithm-note{
+    margin-top:30px;
+    border-left:5px solid var(--blue);
+    padding:12px 0 12px 15px;
+    max-width:770px;
+  }
+  .algorithm-note strong{font-size:17px}
+  .algorithm-note p{margin:6px 0 0;font-size:14px;color:#626059}
+
+  .hardware{
+    margin-top:48px;
+    display:grid;grid-template-columns:1fr 320px;gap:11px
+  }
+  .chip{
+    min-height:470px;border:1px solid var(--ink);background:#151515;color:var(--white);
+    position:relative;overflow:hidden
+  }
+  .chip-grid{
+    position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(0deg,transparent 0,transparent 49px,#252525 50px),
+      repeating-linear-gradient(90deg,transparent 0,transparent 49px,#252525 50px)
+  }
+  .board{
+    position:absolute;left:9%;right:9%;top:13%;bottom:13%;border:1px solid #595953;
+    background:#1b1b19
+  }
+  .wire{position:absolute;height:2px;background:#393934}
+  .w1{left:13%;right:13%;top:30%}.w2{left:18%;right:18%;top:51%}.w3{left:13%;right:13%;top:71%}
+  .qbit{
+    position:absolute;width:34px;height:34px;border-radius:50%;border:1px solid var(--white);
+    display:grid;place-items:center;font:700 9px/1 "Courier New",monospace;color:var(--white)
+  }
+  .q1{left:20%;top:24%}.q2{left:39%;top:24%}.q3{left:58%;top:24%}.q4{left:77%;top:24%}
+  .q5{left:29%;top:64%}.q6{left:48%;top:64%}.q7{left:67%;top:64%}
+  .qbit:nth-of-type(even){border-color:var(--blue);color:var(--blue);box-shadow:0 0 22px rgba(46,75,255,.22)}
+  .chip-caption{
+    position:absolute;left:15px;top:13px;font:700 9px/1 "Courier New",monospace;color:#aaa69c;letter-spacing:.12em
+  }
+  .hardware-notes{
+    border:1px solid var(--ink);background:var(--orange);padding:19px
+  }
+  .hardware-notes h3{margin:40px 0 10px;font-size:31px;line-height:.9;letter-spacing:-.07em;text-transform:uppercase}
+  .hardware-notes p{margin:0;font-size:13px;line-height:1.45}
+  .hardware-notes .line{
+    border-top:1px solid rgba(0,0,0,.35);padding-top:12px;margin-top:20px;
+    font:700 9px/1.55 "Courier New",monospace
+  }
+
+  .end{
+    padding:140px 0 130px;
+    border-top:1px solid var(--ink);
+  }
+  .end-kicker{font:700 10px/1 "Courier New",monospace;letter-spacing:.15em;color:#706c64}
+  .end h2{
+    margin:22px 0 0;
+    max-width:1030px;
+    font-size:clamp(52px,8vw,112px);
+    line-height:.82;letter-spacing:-.085em;text-transform:uppercase
+  }
+  .end h2 .blue{color:var(--blue)}
+  .end p{max-width:700px;font-size:17px;line-height:1.55;margin:28px 0 0;color:#5f5d58}
+
+  footer{
+    border-top:1px solid var(--ink);
+    padding:28px 0 60px;
+    font:700 9px/1.7 "Courier New",monospace;
+    color:#706c64;
+  }
+  footer a{color:#333;text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
+  .visible{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .mast-row{grid-template-columns:100px 1fr}
+    .edition{display:none}
+    .hero{grid-template-columns:1fr;align-items:start}
+    .orbit-plate{max-width:650px}
+    .section-grid{grid-template-columns:1fr}
+    .hardware{grid-template-columns:1fr}
+    .game{grid-template-columns:1fr}
+    .game-rail{border-right:0;border-bottom:2px solid var(--ink);min-height:190px}
+    .game-rail h3{margin:22px 0 0}
+    .slots{grid-template-columns:repeat(4,1fr)}
+  }
+  @media(max-width:560px){
+    .hero{padding-top:55px}
+    .hero-title{font-size:20vw}
+    .spec-grid{display:grid;grid-template-columns:1fr}
+    .spec:nth-child(n){grid-column:span 1}
+    .formula{font-size:24px}
+    .formula-note{text-align:left}
+    .readout{grid-template-columns:1fr}
+    .metrics{grid-template-columns:1fr}
+    .game-stage{padding:14px}
+    .chip{min-height:370px}
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <header class="mast">
+    <div class="shell mast-row">
+      <div class="micro">QBIT<br>LAB</div>
+      <div class="micro">FIELD NOTE 01 / A VISUAL INTRODUCTION TO QUANTUM COMPUTING</div>
+      <div class="micro edition">ROORKEE · INDIA<br>REV. 2026.09</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-left reveal">
+        <h1>ENTER<br>THE <span class="blue">Q</span><br>REGIME.</h1>
+        <div class="hero-rule">
+          <div class="hero-index">00<br>THESIS</div>
+          <p>
+            A quantum computer is not a faster version of a classical computer.
+            It is a different computational model built from quantum states,
+            quantum gates, interference, measurement, and specialized hardware.
+          </p>
+        </div>
+      </div>
+
+      <div class="orbit-plate reveal">
+        <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+        <div class="point p1"></div><div class="point p2"></div><div class="point p3"></div><div class="point p4"></div>
+        <div class="center">|ψ⟩</div>
+        <div class="plate-note">A STATE IS NOT JUST A VALUE.<br>ITS AMPLITUDE + PHASE MATTER.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell section-grid reveal" id="idea">
+        <aside class="side">01<br>THE IDEA<br><br>BIT / QUBIT</aside>
+        <div>
+          <h2>Two symbols.<br>Very different machinery.</h2>
+          <p class="intro">
+            Classical bits are used by familiar digital logic. Qubits are quantum systems
+            whose states can be prepared in superposition. A quantum algorithm then applies
+            controlled transformations before measurement produces classical data.
+          </p>
+
+          <div class="formula-strip">
+            <div class="formula">|ψ⟩ = α|0⟩ + β|1⟩</div>
+            <div class="formula-note">NORMALIZATION: |α|² + |β|² = 1<br>MEASUREMENT PROBABILITY COMES FROM AMPLITUDE MAGNITUDE</div>
+          </div>
+
+          <div class="spec-grid">
+            <article class="spec">
+              <div class="n">A / 01</div>
+              <h3>SUPERPOSITION</h3>
+              <p>A qubit can occupy a combination of basis states. This is a property of the quantum state—not a claim that two classical answers are simultaneously readable.</p>
+            </article>
+            <article class="spec">
+              <div class="n">A / 02</div>
+              <h3>ENTANGLEMENT</h3>
+              <p>Multiple quantum systems can form joint states with correlations that cannot be represented as independent classical bits.</p>
+            </article>
+            <article class="spec">
+              <div class="n">A / 03</div>
+              <h3>INTERFERENCE</h3>
+              <p>Quantum amplitudes carry phase. They can add or cancel, allowing an algorithm to increase the amplitude of useful outcomes and suppress others.</p>
+            </article>
+            <article class="spec">
+              <div class="n">A / 04</div>
+              <h3>MEASUREMENT</h3>
+              <p>Measurement yields a classical outcome. The point of an algorithm is to shape the state so useful outcomes have high probability when measured.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="qubit">
+      <div class="shell section-grid reveal">
+        <aside class="side">02<br>THE QUBIT<br><br>STATE → GATE → STATE</aside>
+        <div>
+          <h2>Control the<br>probability landscape.</h2>
+          <p class="intro">
+            Quantum gates change amplitudes and phases. The useful computational trick is not
+            “look at every possibility”—it is arranging interference so the final distribution
+            contains more weight where the answer should be.
+          </p>
+
+          <div class="visual">
+            <div class="visual-top"><span>STATE EVOLUTION / CONCEPTUAL VIEW</span><span>H → U → M</span></div>
+            <div class="probability-field">
+              <div class="beam"><div class="pulse"></div></div>
+              <div class="state-node sn1">|0⟩</div>
+              <div class="state-node sn2">H</div>
+              <div class="state-node sn3">ψ</div>
+              <div class="state-node sn4">M</div>
+              <div class="visual-label">Prepare a quantum state → apply gates → exploit interference → measure a classical result.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="search">
+      <div class="shell section-grid reveal">
+        <aside class="side">03<br>CASE STUDY<br><br>GROVER / SEARCH</aside>
+        <div>
+          <h2>Hide one answer<br>among eight.</h2>
+          <p class="intro">
+            Three qubits have 2³ = 8 computational basis states. We hide one.
+            Classical search checks candidates sequentially. Grover's algorithm instead prepares
+            a superposition, phase-marks the target with an oracle, and repeatedly amplifies its amplitude.
+          </p>
+
+          <div class="game reveal">
+            <aside class="game-rail">
+              <div>
+                <div class="micro">EXPERIMENT / 777-Q</div>
+                <h3>Find<br>the<br>state.</h3>
+                <div class="smallcopy">EDUCATIONAL SIMULATION<br>NOT A QUANTUM HARDWARE EMULATOR</div>
+              </div>
+              <div class="seven">7↙7</div>
+            </aside>
+
+            <div class="game-stage">
+              <div class="game-title-row">
+                <div class="game-title">Unstructured search // 3 qubits</div>
+                <div class="target-tag">TARGET: HIDDEN</div>
+              </div>
+
+              <div class="slots" id="slots"></div>
+
+              <div class="buttons">
+                <button class="blue" id="classicalBtn">RUN CLASSICAL</button>
+                <button id="quantumBtn">RUN GROVER-STYLE</button>
+                <button class="alt" id="newTargetBtn">NEW TARGET</button>
+              </div>
+
+              <div class="readout">
+                <div class="label">EXPERIMENT<br>CONSOLE</div>
+                <div>
+                  <div class="phase" id="phase">READY</div>
+                  <div class="copy" id="copy">Choose a method. The target will remain hidden until the measurement stage.</div>
+                  <div class="progress"><span id="bar"></span></div>
+                </div>
+              </div>
+
+              <div class="metrics">
+                <div class="metric">
+                  <div class="label">CLASSICAL / CHECKS USED</div>
+                  <div class="value" id="classicalMetric">0</div>
+                  <p>Sequential inspection. In the worst case, all N candidates must be checked.</p>
+                </div>
+                <div class="metric">
+                  <div class="label">GROVER / QUERY SCALE</div>
+                  <div class="value" id="quantumMetric">—</div>
+                  <p>Idealized unstructured search scales on the order of √N oracle queries.</p>
+                  <div class="micro" style="margin-top:12px">ORACLE PHASE MARK <span id="oracle">○</span></div>
+                </div>
+              </div>
+
+              <div class="amplitudes">
+                <div class="amp-head"><span>AMPLITUDE VISUALIZER</span><span>UNIFORM → AMPLIFIED</span></div>
+                <div class="amp-grid" id="amps"></div>
+                <div class="buttons"><button class="alt" id="interferenceBtn">APPLY INTERFERENCE</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="algorithm-note">
+            <strong>Why this is a useful example.</strong>
+            <p>
+              Grover's algorithm is a standard example of quantum algorithmic advantage for unstructured search:
+              its query complexity is quadratic in the size of the search space. It does not provide “all answers at once”
+              for free—the amplitudes must be engineered before measurement.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="hardware">
+      <div class="shell section-grid reveal">
+        <aside class="side">04<br>HARDWARE<br><br>QPU / CONTROL / READOUT</aside>
+        <div>
+          <h2>The algorithm<br>needs a machine.</h2>
+          <p class="intro">
+            Real quantum computing is an engineering stack. The physical qubits need control,
+            readout, calibration, isolation, and techniques for mitigating or correcting errors.
+          </p>
+
+          <div class="hardware">
+            <div class="chip">
+              <div class="chip-grid"></div>
+              <div class="board"></div>
+              <div class="wire w1"></div><div class="wire w2"></div><div class="wire w3"></div>
+              <div class="qbit q1">Q1</div><div class="qbit q2">Q2</div><div class="qbit q3">Q3</div><div class="qbit q4">Q4</div>
+              <div class="qbit q5">Q5</div><div class="qbit q6">Q6</div><div class="qbit q7">Q7</div>
+              <div class="chip-caption">CONCEPTUAL QPU LAYOUT / NOT TO SCALE</div>
+            </div>
+
+            <aside class="hardware-notes">
+              <div class="micro">FIELD NOTE / 04</div>
+              <h3>The hard part<br>is control.</h3>
+              <p>
+                A useful quantum state is fragile. Physical implementations must suppress
+                unwanted interactions and accurately control and measure the qubits.
+              </p>
+              <div class="line">
+                QUBITS<br>
+                + CONTROL<br>
+                + READOUT<br>
+                + ERROR MANAGEMENT<br>
+                = QUANTUM PROCESSOR
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="end">
+      <div class="shell reveal">
+        <div class="end-kicker">05 / FINAL FIELD NOTE</div>
+        <h2>Not “every answer.”<br><span class="blue">The right interference.</span></h2>
+        <p>
+          Quantum computing is a way of using quantum mechanics as a computational resource.
+          Superposition creates a rich state space; gates shape it; phase enables interference;
+          measurement extracts a classical result.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      SOURCES / EDUCATIONAL BACKGROUND<br><br>
+      <a href="https://quantum.microsoft.com/en-us/insights/education/concepts/what-is-quantum-computing" target="_blank">Microsoft Quantum — What is quantum computing?</a> ·
+      <a href="https://quantum.microsoft.com/en-us/insights/education/concepts/superposition" target="_blank">Superposition</a> ·
+      <a href="https://quantum.microsoft.com/en-us/insights/education/concepts/interference" target="_blank">Interference</a> ·
+      <a href="https://quantum.microsoft.com/en-us/insights/education/concepts/quantum-algorithms" target="_blank">Quantum algorithms</a> ·
+      <a href="https://quantum.microsoft.com/en-us/insights/education/concepts/quantum-error-correction" target="_blank">Quantum error correction</a>
+      <br><br>
+      Visuals and the search experiment are conceptual teaching aids, not a physical quantum-computer simulation.
+    </div>
+  </footer>
+</div>
+
+<script>
+const STATES=["000","001","010","011","100","101","110","111"];
+let target=Math.floor(Math.random()*8);
+let busy=false;
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function renderSlots(){
+  $("slots").innerHTML=STATES.map((s,i)=>`
+    <div class="slot" data-i="${i}">
+      <div>${s}<span>${i===target?"TARGET":"BASIS"}</span></div>
+    </div>
+  `).join("");
+}
+function renderAmps(){
+  $("amps").innerHTML=STATES.map((s,i)=>`
+    <div class="amp-row">
+      <span>${s}</span>
+      <div class="track"><div class="fill" data-fill="${i}"></div></div>
+      <span data-v="${i}">12.5%</span>
+    </div>
+  `).join("");
+}
+function status(title,copy,p){
+  $("phase").textContent=title;
+  $("copy").textContent=copy;
+  $("bar").style.width=p+"%";
+}
+function reset(){
+  target=Math.floor(Math.random()*8);
+  busy=false;
+  renderSlots(); renderAmps();
+  status("READY","Choose a method. The target will remain hidden until the measurement stage.",0);
+  $("classicalMetric").textContent="0";
+  $("quantumMetric").textContent="—";
+  $("oracle").textContent="○";
+  $("classicalBtn").disabled=false;
+  $("quantumBtn").disabled=false;
+}
+async function classical(){
+  if(busy)return;
+  busy=true;
+  $("classicalBtn").disabled=true;
+  $("quantumBtn").disabled=true;
+  const slots=[...document.querySelectorAll(".slot")];
+  for(let i=0;i<=target;i++){
+    status("SCAN "+(i+1),"Sequential mode: one basis state is checked at a time.",((i+1)/(target+1))*100);
+    slots[i].classList.add("mark");
+    await sleep(430);
+    slots[i].classList.remove("mark");
+    slots[i].classList.add(i===target?"hit":"done");
+    $("classicalMetric").textContent=String(i+1);
+  }
+  status("FOUND","The target was reached after sequential checks.",100);
+  busy=false;
+  $("quantumBtn").disabled=false;
+}
+async function quantum(){
+  if(busy)return;
+  busy=true;
+  $("classicalBtn").disabled=true;
+  $("quantumBtn").disabled=true;
+  const slots=[...document.querySelectorAll(".slot")];
+
+  status("SUPERPOSITION","Prepare an equal superposition across all 8 basis states.",20);
+  slots.forEach(s=>s.classList.add("mark"));
+  await sleep(850);
+
+  status("ORACLE","The oracle marks the hidden target by changing its phase.",40);
+  $("oracle").textContent="●";
+  slots[target].classList.add("hit");
+  await sleep(850);
+
+  status("INTERFERENCE","Amplitude amplification increases the marked state's amplitude.",67);
+  amplify();
+  await sleep(900);
+
+  status("MEASUREMENT","The amplified target is now much more likely to appear.",90);
+  slots.forEach(s=>s.classList.remove("mark"));
+  slots[target].classList.remove("hit");
+  slots[target].classList.add("done");
+  $("quantumMetric").textContent="≈ √8";
+  await sleep(650);
+
+  status("FOUND","Idealized Grover scaling is approximately √N oracle queries for unstructured search.",100);
+  busy=false;
+  $("classicalBtn").disabled=false;
+}
+function amplify(){
+  document.querySelectorAll("[data-fill]").forEach((el,i)=>{
+    const pct=i===target?76:3.4;
+    el.style.width=pct+"%";
+    el.classList.toggle("target",i===target);
+  });
+  document.querySelectorAll("[data-v]").forEach((el,i)=>{
+    el.textContent=(i===target?76:3.4)+"%";
+  });
+}
+$("classicalBtn").onclick=classical;
+$("quantumBtn").onclick=quantum;
+$("newTargetBtn").onclick=reset;
+$("interferenceBtn").onclick=amplify;
+
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add("visible")});
+},{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
+
+renderSlots();
+renderAmps();
+</script>
+</body>
+</html>
